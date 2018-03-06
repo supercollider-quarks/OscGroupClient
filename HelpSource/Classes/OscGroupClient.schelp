@@ -1,10 +1,10 @@
 TITLE:: OscGroupClient
-summary:: an SC interface to Ross Bencinia's OscGroups
+summary:: an SC interface to Ross Bencina's OscGroups
 categories:: External Control>OSC
 related:: Classes/OSCFunc, Classes/OSCdef, Guides/OSC_communication
 
 DESCRIPTION::
-an SC interface to Ross Bencinia's OscGroups, available for download from:
+an SC interface to Ross Bencina's OscGroups, available for download from:
 
 
 	http://www.audiomulch.com/~rossb/code/oscgroups/
@@ -29,13 +29,13 @@ ARGUMENT:: password
 a password for the user. If one has not been set, then what you put here will become the password
 
 ARGUMENT:: groupname
-the name of the group on the server
+a name that all group members agree on, like a user name it should be unique.
 
 ARGUMENT:: grouppassword
 the password for the group. If one has not been set, then what you put here will become the password
 
 ARGUMENT:: serverport
-optional if your server is running on an usuual port
+optional if your server is running on an unusual port
 
 ARGUMENT:: localtoremoteport
 optional
