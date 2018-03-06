@@ -21,9 +21,14 @@ OscGroupClient {
 		}
 
 	join {
-		pid = (program + serveraddress + serverport + localtoremoteport + localtxport + localrxport +
-			username + password + groupname + grouppassword).unixCmd({
-				("OscGroupClient successfully started, attempting to connect to " + serveraddress).postln;
+		var command;
+
+		command = [program, serveraddress, serverport, localtoremoteport, localtxport, localrxport,
+			username, password, groupname, grouppassword].collect({|i|  i.asString });
+
+		pid = command.unixCmd({
+				//("OscGroupClient successfully started, attempting to connect to " + serveraddress).postln;
+			// this seems to get called when the command ends
 				});
 		netAddr = NetAddr("localhost", localtxport);
 		ShutDown.add({("kill" + pid).systemCmd});
