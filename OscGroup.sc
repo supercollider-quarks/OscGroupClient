@@ -77,7 +77,6 @@ OscGroupClient {
 		}
 
 	addResp { arg id, function;
-		var oscfunc;
 		pid.notNil.if({
 			// there are two ways to pass in the symbol id... fix it here
 			id = this.formatSymbol(id);
