@@ -46,8 +46,8 @@ OscGroupClient {
 				peerCheckers.add(peerName -> Task({
 					// timeout of 10 seconds to check for peer's ping
 					10.wait;
-					peerCheckers.remove(peerName);
-					peers.remove(peerName)
+					peerCheckers[peerName] = nil;
+					peers.remove(peerName);
 				});
 			)});
 			peerCheckers[peerName].stop;
