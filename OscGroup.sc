@@ -1,6 +1,6 @@
 OscGroupClient {
 	var serveraddress, username, password, groupname, grouppassword, serverport, localtoremoteport,
-		localtxport, localrxport, responders, <pid, <netAddr;
+		localtxport, localrxport, responders, peerCheckers, <peers, <pid, <netAddr;
 	classvar <>program;
 
 	*new {arg serveraddress, username, password, groupname, grouppassword, serverport = 22242,
@@ -18,26 +18,51 @@ OscGroupClient {
 		localrxport.isNil.if({
 			localrxport = NetAddr.langPort;
 			});
+		peers = Set();
+		peerCheckers = IdentityDictionary.new;
 		}
 
 	join {
 		var command;
 
+		(program.pathExists == false).if({
+			("'" ++ program ++ "' not found, maybe you forgot to set OscGroupClient.program to the OscGroupClient binary?").postln;
+			^false;
+		});
+
 		command = [program, serveraddress, serverport, localtoremoteport, localtxport, localrxport,
 			username, password, groupname, grouppassword].collect({|i|  i.asString });
 
-		pid = command.unixCmd({
-				//("OscGroupClient successfully started, attempting to connect to " + serveraddress).postln;
-			// this seems to get called when the command ends
-				});
+		pid = command.unixCmd;
+
 		netAddr = NetAddr("localhost", localtxport);
+
+		// Sets up a responder for ping messages and keeps track of all peers
+		// using 10 seconds timeout
+		this.addResp('/groupclient/ping', {arg msg, time, addr, recvPort;
+			var peerName = msg[1];
+			peers.add(peerName);
+			peerCheckers[peerName].isNil.if({
+				peerCheckers.add(peerName -> Task({
+					// timeout of 10 seconds to check for peer's ping
+					10.wait;
+					peerCheckers[peerName] = nil;
+					peers.remove(peerName);
+				});
+			)});
+			peerCheckers[peerName].stop;
+			peerCheckers[peerName].play(doReset: true);
+		});
+
 		ShutDown.add({("kill" + pid).systemCmd});
 		}
 
 	close {
+		var keys;
 		("kill" + pid).systemCmd;
 		pid = nil;
-		responders.do({arg resp; resp.postln; resp.remove});
+		keys = responders.keys;
+		keys.do({arg id; this.removeResp(id)});
 		responders = IdentityDictionary.new;
 		}
 
@@ -55,7 +80,8 @@ OscGroupClient {
 		pid.notNil.if({
 			// there are two ways to pass in the symbol id... fix it here
 			id = this.formatSymbol(id);
-			responders.add(id -> OSCresponderNode(nil, id, function).add);
+			responders[id].notNil.if({this.removeResp(id)});
+			responders.add(id -> OSCFunc(function, id, recvPort: localrxport));
 			}, {
 			"You must register your client on an OscGroupServer before you add a responder".warn
 			})
@@ -63,7 +89,7 @@ OscGroupClient {
 
 	removeResp {arg id;
 		id = this.formatSymbol(id);
-		responders[id].remove;
+		responders[id].free;
 		responders[id] = nil;
 		}
 
